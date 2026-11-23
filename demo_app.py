@@ -90,14 +90,25 @@ class ContractReport:
         return [c for c in self.checks if c["结果"] != "通过"]
 
 
+def _find_in(base: Path, *parts: str) -> Path:
+    """优先按子目录找；找不到就退回根目录（兼容 GitHub 平铺上传）。"""
+    sub = base.joinpath(*parts)
+    if sub.exists():
+        return sub
+    flat = base / parts[-1]
+    if flat.exists():
+        return flat
+    return sub
+
+
 def load_bundle(base_dir: Path | str = BASE_DIR) -> DataBundle:
     """读取四份风险成果，统一按文本读取商品标识，避免长ID精度丢失。"""
     base = Path(base_dir)
     paths = {
-        "cleaned": base / "数据" / "清洗后商品数据.csv",
-        "products": base / "结果" / "商品风险汇总.csv",
-        "signals": base / "结果" / "风险信号明细.csv",
-        "workbook": base / "结果" / "电商监管风险识别结果.xlsx",
+        "cleaned": _find_in(base, "数据", "清洗后商品数据.csv"),
+        "products": _find_in(base, "结果", "商品风险汇总.csv"),
+        "signals": _find_in(base, "结果", "风险信号明细.csv"),
+        "workbook": _find_in(base, "结果", "电商监管风险识别结果.xlsx"),
     }
     missing = [str(p) for p in paths.values() if not p.exists()]
     if missing:
