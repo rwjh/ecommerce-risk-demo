@@ -25,13 +25,26 @@ import plotly.graph_objects as go
 import streamlit as st
 
 BASE_DIR = Path(__file__).resolve().parent
+
+
+def _find(*parts: str) -> Path:
+    """优先按子目录找；找不到就退回根目录（兼容 GitHub 平铺上传）。"""
+    sub = BASE_DIR.joinpath(*parts)
+    if sub.exists():
+        return sub
+    flat = BASE_DIR / parts[-1]
+    if flat.exists():
+        return flat
+    return sub  # 返回原始路径，后续报错信息仍清晰
+
+
 PATHS = {
-    "cleaned": BASE_DIR / "数据" / "清洗后商品数据.csv",
-    "products": BASE_DIR / "结果" / "商品风险汇总.csv",
-    "signals": BASE_DIR / "结果" / "风险信号明细.csv",
-    "workbook": BASE_DIR / "结果" / "电商监管风险识别结果.xlsx",
+    "cleaned": _find("数据", "清洗后商品数据.csv"),
+    "products": _find("结果", "商品风险汇总.csv"),
+    "signals": _find("结果", "风险信号明细.csv"),
+    "workbook": _find("结果", "电商监管风险识别结果.xlsx"),
 }
-REVIEW_PATH = BASE_DIR / "设计结果" / "人工复核记录.csv"
+REVIEW_PATH = _find("设计结果", "人工复核记录.csv")
 
 PRODUCT_COUNT = 4000
 REVIEW_STATES = ["待核查", "已排除", "需补充材料", "确认问题线索"]
